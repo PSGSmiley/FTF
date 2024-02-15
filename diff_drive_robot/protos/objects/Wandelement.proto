@@ -1,0 +1,55 @@
+#VRML_SIM R2021b utf8
+# Prüfkörper: Wandelement
+# template language: javascript
+
+PROTO Wandelement [
+  field SFVec3f    translation    0 0 0
+  field SFRotation rotation       0 1 0 0
+  field SFFloat    plate_width    0.8
+  field SFFloat    pole_thinkness 0.05
+  field SFString   name        "wandelement"
+]
+{
+  %<
+    let plate_width = fields.plate_width.value;
+    let pole_thinkness = fields.pole_thinkness.value;
+    let pole_height = 0.6;
+  >%
+  Solid {
+    translation IS translation
+    rotation IS rotation
+    name IS name
+    model "wandelement"
+    
+    children [
+      Transform {
+        translation %<= -pole_thinkness/2 >% 0 0.15
+        children [
+          DEF PLATE Platte {
+            size_plate 0.01 %<= plate_width >% 0.3
+          }
+        ]
+      }
+      
+      Transform {
+        translation 0 %<= plate_width/2 >% 0
+        children [
+          DEF POLE_LEFT Pfosten {
+            name "pfosten_links"
+            size_pole %<= pole_thinkness >% %<= pole_thinkness >% %<= pole_height >%
+          }
+        ]
+      }
+
+      Transform {
+        translation 0 %<= -plate_width/2 >% 0
+        children [
+          DEF POLE_RIGHT Pfosten {
+            name "pfosten_rechts"
+            size_pole %<= pole_thinkness >% %<= pole_thinkness >% %<= pole_height >%
+          }
+        ]
+      }
+    ]
+  }
+}

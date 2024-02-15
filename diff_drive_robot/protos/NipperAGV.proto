@@ -1,0 +1,444 @@
+# VRML_SIM R2022a utf8
+# template language: javascript
+# license: Apache License 2.0
+# license url: http://www.apache.org/licenses/LICENSE-2.0
+# This is a proto file for Webots for the HEWPrototyp
+# Extracted from: HEWAGV_platform.urdf
+
+PROTO NipperAGV [
+  field  SFVec3f     translation     2 0.5 0.153
+  field  SFRotation  rotation        0 1 0 0
+  field  SFRotation  LidarRotation   0 0 1 0 #3.14159
+  field  SFString    name            "NipperAGV"  # Is `Robot.name`.
+  field  SFString    controller      "<extern>"         # Is `Robot.controller`.
+  field  MFString    controllerArgs  []             # Is `Robot.controllerArgs`.
+  field  SFString    customData      ""             # Is `Robot.customData`.
+  field  SFBool      supervisor      TRUE          # Is `Robot.supervisor`.
+  field  SFBool      synchronization TRUE           # Is `Robot.synchronization`.
+  field  SFBool      selfCollision   FALSE          # Is `Robot.selfCollision`.
+  field  MFNode      extensionSlot   [ SickS300 { } ]  # Extends the robot with new nodes in the extension slot.
+  #@note params
+  field  SFBool      useGPS                 TRUE
+  field  SFBool      useIMU                 FALSE 
+  field  SFBool      useCompass             FALSE
+  field  SFBool      useHighResModel        FALSE
+  field  SFFloat     baseMass               10
+  field  SFFloat     maxTorque              1000
+  field  SFFloat     wheelRadius            0.1
+  field  SFFloat     maxVelocity            9
+  field  SFVec3f     motorPID               10 0 0
+  field  SFFloat     wheelOffsetX           0.1725
+  field  SFVec3f     wheelPosL              0  0.1725 -0.0522
+  field  SFVec3f     wheelPosR              0 -0.1725 -0.0522
+  field  SFFloat     positionSensorNoise    0.0 # 0.009 rad
+  field  SFVec3f     casterPosL             -1.44 0.15 -0.1
+  field  SFVec3f     casterPosR             -1.45 -0.22 -0.1
+  field  SFVec3f     robotBoundingBox       0.9 0.65 0.45
+  ]
+{
+  Robot {
+    translation IS translation
+    rotation IS rotation
+    controller IS controller
+    controllerArgs IS controllerArgs
+    customData IS customData
+    supervisor IS supervisor
+    synchronization IS synchronization
+    selfCollision IS selfCollision
+    name IS name
+
+    children [
+      %< if (fields.useIMU.value) { >%
+      Solid {
+        translation 0.000000 0.000000 0.095000
+        rotation 0.000000 1.000000 0.000000 0.000000
+        name "base_imu"
+        children [ InertialUnit {} ]
+      }
+      %< } >%
+ 
+      %< if (fields.useGPS.value) { >%
+      Solid {
+        translation 0.0 0.0 0.0
+        name "base_gps"
+        children [ GPS {} ]
+      }
+      %< } >%
+     
+      %< if (fields.useCompass.value) { >%
+      Solid {
+        translation 0.0 0.0 0.0
+        name "base_compass"
+        children [ Compass {} ]
+      }
+      %< } >%
+
+      Lidar {
+        translation 0.38 3.9804e-07 0.03
+        rotation IS LidarRotation
+        children [
+          Shape {
+            appearance PBRAppearance {
+              baseColor 0 0 0
+              roughness 0.5
+              metalness 0.2
+            }
+            geometry Mesh {
+              url [
+                "https://raw.githubusercontent.com/cyberbotics/webots/R2022a/projects/devices/sick/protos/meshes/sick_s300_black.dae"
+              ]
+            }
+          }
+          Shape {
+            appearance PBRAppearance {
+              baseColor 0 0 0
+            }
+            geometry Mesh {
+              url [
+                "https://raw.githubusercontent.com/cyberbotics/webots/R2022a/projects/devices/sick/protos/meshes/sick_s300_glass.dae"
+              ]
+            }
+          }
+          Shape {
+            appearance PBRAppearance {
+              baseColor 0.969 0.8 0.016
+              roughness 0.5
+              metalness 0.2
+            }
+            geometry Mesh {
+              url [
+                "https://raw.githubusercontent.com/cyberbotics/webots/R2022a/projects/devices/sick/protos/meshes/sick_s300_yellow.dae"
+              ]
+            }
+          }
+        ]
+        name "SICKS300"
+        boundingObject Group {
+          children [
+            Transform {
+              translation 0.0315 0 -0.0712
+              rotation -0.5773516025189619 0.5773476025217157 0.5773516025189619 -2.094405
+              children [
+                Shape {
+                  geometry Box {
+                    size 0.0995 0.0874 0.0443
+                  }
+                }
+              ]
+            }
+            Transform {
+              translation 0 0 -0.0671
+              children [
+                Shape {
+                  geometry Cylinder {
+                    height 0.0956
+                    radius 0.0498
+                  }
+                }
+              ]
+            }
+            Cylinder {
+              height 0.068
+              radius 0.047
+              subdivision 16
+            }
+          ]
+        }
+        physics Physics {
+          density -1
+          mass 1.2
+        }
+        horizontalResolution 400 #540
+        fieldOfView 4.71238898038
+        verticalFieldOfView 0.008726646259962964
+        numberOfLayers 1
+        maxRange 30
+      }
+      DEF GABEL_BOUND Transform {
+        translation 0 0 0.13
+        children [
+          Shape {
+            appearance PBRAppearance {
+              transparency 1
+            }
+            geometry Box {
+              size IS robotBoundingBox
+            }
+          }
+        ]
+      }
+      DEF REARWHEEL_L HingeJoint {
+        jointParameters HingeJointParameters {
+          position 0
+          axis 0 1 0
+          anchor IS casterPosL
+        }
+        device [
+          PositionSensor {
+            name "rear_wheel_left_joint"
+          }
+        ]
+        endPoint Solid {
+          translation IS casterPosL
+          rotation 0 1 0 0
+          children [
+            DEF REARWHEEL_TF Transform {
+              translation 0 0 0
+              rotation -1 0 0 1.5707963
+              children [
+                DEF REAR_WHEEL Shape {
+                  appearance PBRAppearance {
+                  }
+                  geometry Cylinder {
+                    height 0.1
+                    radius 0.025
+                  }
+                }
+              ]
+            }
+          ]
+          name "rear_wheel_left"
+          contactMaterial "frictionless"
+          boundingObject USE REARWHEEL_TF
+          physics Physics {
+            density -1
+            mass 1
+            centerOfMass [
+              0 0 0
+            ]
+          }
+        }
+      }
+      DEF REARWHEEL_R HingeJoint {
+        jointParameters HingeJointParameters {
+          position 0
+          axis 0 1 0
+          anchor IS casterPosR
+        }
+        device [
+          PositionSensor {
+            name "rear_wheel_right_joint"
+          }
+        ]
+        endPoint Solid {
+          translation IS casterPosR
+          rotation 0 -1 0 0
+          children [
+            DEF REARWHEEL_TF Transform {
+              translation 0 0 0
+              rotation -1 0 0 1.5707963
+              children [
+                DEF REAR_WHEEL Shape {
+                  appearance PBRAppearance {
+                  }
+                  geometry Cylinder {
+                    height 0.1
+                    radius 0.025
+                  }
+                }
+              ]
+            }
+          ]
+          name "rear_wheel_right"
+          contactMaterial "frictionless"
+          boundingObject USE REARWHEEL_TF
+          physics Physics {
+            density -1
+            mass 1
+            centerOfMass [
+              0 0 0
+            ]
+          }
+        }
+      }
+      DEF DREHSCHEMEL HingeJoint {
+        jointParameters HingeJointParameters {
+          position 0
+          axis 0 0 1
+          anchor 0 0 0
+          springConstant 0
+          dampingConstant 0
+        }
+        device [
+          PositionSensor {
+            name "drehschemel_sensor"
+          }
+        ]
+        endPoint Solid {
+          translation 0 0 0
+          rotation 0 0 -1 0
+          children [
+            DEF DIFFDRIVE_BOUND Transform {
+              children [
+                Shape {
+                  appearance PBRAppearance {
+                    transparency 1
+                  }
+                  geometry Box {
+                    size 0.35 0.25 0.15
+                  }
+                }
+              ]
+            }
+            DEF MESH_B Transform {
+              translation 0 0 0.04
+              rotation 0 0 1 -1.55
+              scale 0.025 0.025 0.025
+              children [
+                Shape {
+                  appearance PBRAppearance {
+                    transparency 0.01
+                    roughness 0.5
+                    metalness 0.2
+                    baseColor 0.2 0.2 0.2
+                  }
+                  geometry Mesh {
+                    url [
+                      #"/home/daniel/dev_ws/src/hewagv_simulation/meshes/D00331747_Drehschemel_ohne_Antriebe.stl"
+                      "meshes/NipperAGV/D00331747_Drehschemel_ohne_Antriebe.stl"
+                    ]
+                  }
+                  castShadows FALSE
+                }
+              ]
+            }
+            HingeJoint { # @note left
+              jointParameters HingeJointParameters {
+                axis 0.000000 1.000000 0.000000
+                anchor IS wheelPosL
+                # suspensionDampingConstant 0.2
+                # dampingConstant 0.2
+                # staticFriction 0.0
+              }
+              device [
+                RotationalMotor {
+                  name "left_wheel_joint"
+                  maxTorque IS maxTorque
+                  controlPID IS motorPID
+                  maxVelocity IS maxVelocity
+                }
+                PositionSensor {
+                  noise IS positionSensorNoise
+                  name "left_wheel_joint_sensor"
+                }
+              ]
+              endPoint Solid {
+                translation IS wheelPosL
+                rotation -1 0 0 1.5707963
+                contactMaterial "wheel"
+                children [
+                  DEF WHEEL Transform {
+                    children [
+                      Shape {
+                        appearance DEF blue PBRAppearance {
+                          baseColor 0.2 0.2 0.8
+                          roughness 0.2
+                          metalness 0.8
+                        }
+                        geometry Cylinder {
+                          radius IS wheelRadius
+                          height 0.04
+                        }
+                      }
+                    ]
+                  }
+                ]
+                name "left_wheel"
+                boundingObject USE WHEEL
+                physics Physics {
+                  density -1
+                  mass 0.300000
+                  centerOfMass [ 0.000000 0.000000 0.000000 ]
+                  # inertiaMatrix [
+                  #   6.790000e-03 2.025000e-04 2.025000e-04
+                  #   0.000000e+00 0.000000e+00 0.000000e+00
+                  # ]
+                }
+              }
+            }
+            HingeJoint { # @note right
+              jointParameters HingeJointParameters {
+                axis 0.000000 1.000000 0.000000
+                anchor IS wheelPosR
+                #suspensionDampingConstant 0.2
+                #dampingConstant 0.2
+                #staticFriction 0.0
+              }
+              device [
+                RotationalMotor {
+                  name "right_wheel_joint"
+                  maxTorque IS maxTorque
+                  controlPID IS motorPID
+                  maxVelocity IS maxVelocity
+                }
+                PositionSensor {
+                  noise IS positionSensorNoise
+                  name "right_wheel_joint_sensor"
+                }
+              ]
+              endPoint Solid {
+                translation IS wheelPosR
+                rotation -1 0 0 1.5707963
+                contactMaterial "wheel"
+                children [
+                  USE WHEEL
+                ]
+                name "right_wheel"
+                boundingObject USE WHEEL
+                physics Physics {
+                  density -1
+                  mass 0.300000
+                  centerOfMass [ 0.000000 0.000000 0.000000 ]
+                  # inertiaMatrix [
+                  #   6.790000e-03 2.025000e-04 2.025000e-04
+                  #   0.000000e+00 0.000000e+00 0.000000e+00
+                  # ]
+                }
+              }
+            }
+          ]
+          name "drehschemel"
+          contactMaterial "frictionless"
+          boundingObject USE DIFFDRIVE_BOUND
+          physics Physics {
+            density -1
+            mass IS baseMass
+          }
+        }
+      }
+      DEF MESH Transform {
+        translation -0.724847 0.225179 -0.07
+        rotation 0 0 1 -1.55
+        scale 0.025 0.025 0.025
+        children [
+          Shape {
+            appearance PBRAppearance {
+              transparency 0.1
+              roughness 0.5
+              metalness 0.2
+              baseColor 0.8 0.8 0.8
+            }
+            geometry Mesh {
+              url [
+                #"/home/daniel/dev_ws/src/hewagv_simulation/meshes/D00347465_Hubgabel-FTF_ohne_Drehschemel.stl"
+                "meshes/NipperAGV/D00347465_Hubgabel-FTF_ohne_Drehschemel.stl"
+             ]
+            }
+            castShadows FALSE
+          }
+        ]
+      }
+    ]
+    name "NipperAGV"
+    description "this is the hew nipper agv"
+    boundingObject USE GABEL_BOUND
+    physics Physics {
+      density -1
+      mass 1 #baseMass
+    }
+    controller "<extern>"
+    supervisor TRUE
+    linearVelocity 1.9762900714527142e-06 -4.225421604846109e-07 -6.410286969521001e-08
+    angularVelocity -1.3996308458992357e-07 -4.089656889195781e-09 -3.253092306631924e-06
+}
+}

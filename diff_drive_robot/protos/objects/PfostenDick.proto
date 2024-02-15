@@ -1,0 +1,25 @@
+#VRML_SIM R2021b utf8
+# Prüfkörper (dick)
+# template language: javascript
+
+PROTO PfostenDick [
+  field SFVec3f    translation    0 0 0
+  field SFRotation rotation       0 1 0 0
+  field SFString   name           "pfosten_dick"
+  field SFFloat    pole_thickness 0.05
+  field SFFloat    pole_height    0.6
+  field SFFloat    mass           10
+]
+{
+  %<
+    let pole_thickness = fields.pole_thickness.value;
+    let pole_height = fields.pole_height.value;
+  >%
+  Pfosten {
+    translation IS translation
+    rotation IS rotation
+    size_pole %<= pole_thickness >% %<= pole_thickness >% %<= pole_height >%
+    name IS name
+    mass IS mass
+  }
+}

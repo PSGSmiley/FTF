@@ -1,0 +1,64 @@
+#VRML_SIM R2022a utf8
+# license: Copyright Cyberbotics Ltd. Licensed for use only with Webots.
+# license url: https://cyberbotics.com/webots_assets_license
+# documentation url: https://www.cyberbotics.com/doc/guide/lidar-sensors#lds-01
+# Model of the Robotis LDS-01 Laser Distance Sensor
+# Reference: http://www.robotis.us/360-laser-distance-sensor-lds-01-lidar/
+# template language: javascript
+
+PROTO RPLidar [
+  field SFVec3f    translation       0 0 0
+  field SFRotation rotation          0 1 0 0 # -1 0 0 1.5707963  # -0.5773503 0.5773503 0.5773503 2.0943951
+  field SFString   name              "RPLidar"
+  field SFFloat    noise             0.0043 # gaussian noise
+  field SFBool     enablePhysics     TRUE
+]
+{
+  Lidar {
+    translation IS translation
+    rotation IS rotation
+    children [
+      Shape {
+        castShadows FALSE
+        appearance DEF MAIN_APPEARANCE RoughPolymer {
+          baseColor 0 0 0
+          textureTransform TextureTransform {
+            scale 4 4
+          }
+        }
+        geometry Cylinder {
+            radius 0.05
+            height 0.04
+        }
+      }
+    ]
+    name IS name
+    boundingObject Group {
+      children [
+        Transform {
+          translation 0 0 0
+          rotation 0 1 0 0
+          children [
+            Cylinder {
+              radius 0.055
+              height 0.045
+            }
+          ]
+        }
+      ]
+    }
+    %< if (fields.enablePhysics.value) { >%
+    physics Physics {
+      density -1
+      mass 0.125
+    }
+    %< } >%
+    horizontalResolution 400 # 360° / 0.9°
+    fieldOfView 6.2831853 # 2pi
+    numberOfLayers 1
+    near 0.07
+    minRange 0.2
+    maxRange 16.0
+    noise IS noise
+  }
+}

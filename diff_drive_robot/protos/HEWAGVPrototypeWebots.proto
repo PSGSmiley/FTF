@@ -1,0 +1,334 @@
+# VRML_SIM R2022a utf8
+# template language: javascript
+# license: Apache License 2.0
+# license url: http://www.apache.org/licenses/LICENSE-2.0
+# This is a proto file for Webots for the HEWPrototyp
+# Extracted from: HEWAGV_platform.urdf
+
+
+PROTO HEWAGVPrototypeWebots [
+  field  SFVec3f     translation     0 0 0.153
+  field  SFRotation  rotation        0 1 0 0
+  field  SFString    name            "ftf_lidar"  # Is `Robot.name`.
+  field  SFString    controller      "<extern>"         # Is `Robot.controller`.
+  field  MFString    controllerArgs  []             # Is `Robot.controllerArgs`.
+  field  SFString    customData      ""             # Is `Robot.customData`.
+  field  SFBool      supervisor      FALSE          # Is `Robot.supervisor`.
+  field  SFBool      synchronization TRUE           # Is `Robot.synchronization`.
+  field  SFBool      selfCollision   FALSE          # Is `Robot.selfCollision`.
+  #@note params
+  field  SFBool      useGPS                 FALSE
+  field  SFBool      useIMU                 FALSE 
+  field  SFBool      useCompass             FALSE
+  field  SFBool      useHighResModel        FALSE
+  field  SFFloat     baseMass               1
+  field  SFFloat     maxTorque              1000
+  field  SFFloat     wheelRadius            0.09
+  field  SFFloat     maxVelocity            9
+  field  SFVec3f     motorPID               10 0 0
+  field  SFFloat     wheelOffsetX           0.1725
+  field  SFVec3f     wheelPosL              0  0.1725 -0.0522
+  field  SFVec3f     wheelPosR              0   -0.1725 -0.0522
+  field  SFFloat     positionSensorNoise    0.0 # 0.009 rad
+  field  SFVec3f     casterBallPos          -0.290000 0.000000 -0.0522
+  field  SFVec3f     robotBoundingBox       0.495 0.645 0.045
+  ] 
+{
+  Robot {
+    translation IS translation
+    rotation IS rotation
+    controller IS controller
+    controllerArgs IS controllerArgs
+    customData IS customData
+    supervisor IS supervisor
+    synchronization IS synchronization
+    selfCollision IS selfCollision
+    name IS name
+    children [
+      Accelerometer {
+        name "accelerometer"
+      }
+      Gyro {
+        name "gyro"
+      }
+      Compass {
+        name "compass"
+      }
+      Solid {
+        rotation 0 0 1 1.01503e-06
+        name "imu_link"
+      }
+      GPS {
+        name "gps"
+      }
+      InertialUnit {
+        name "inertial_unit"
+      }
+      Transform {
+        translation %<= -fields.wheelOffsetX.value >% 0.0 0.0
+        rotation 0.000000 0.000000 1.000000 1.570796
+        children [
+          %< if (fields.useHighResModel.value) { >%
+            HEWPrototyp_D00324127Mesh_optimized {}
+          %< } else { >%
+            Shape {
+              appearance DEF grey PBRAppearance {
+                baseColor 0.500000 0.500000 0.500000
+                roughness 1.000000
+                metalness 0
+              }
+              geometry Box {
+                 size IS robotBoundingBox
+              }
+            }
+          %< } >%
+        ]
+      }
+      HingeJoint { # @note left
+        jointParameters HingeJointParameters {
+          axis 0.000000 1.000000 0.000000
+          anchor IS wheelPosL
+          # suspensionDampingConstant 0.2
+          # dampingConstant 0.2
+          # staticFriction 0.0
+        }
+        device [
+          RotationalMotor {
+            name "left wheel motor"
+            maxTorque IS maxTorque
+            controlPID IS motorPID
+            maxVelocity IS maxVelocity
+          }
+          PositionSensor {
+            noise IS positionSensorNoise
+            name "left wheel sensor"
+          }
+        ]
+        endPoint Solid {
+          translation IS wheelPosL
+          rotation -1 0 0 1.5707963
+          contactMaterial "wheel"
+          children [
+            DEF WHEEL Transform {
+              children [
+                Shape {
+                  appearance DEF blue PBRAppearance {
+                    baseColor 0.2 0.2 0.8
+                    roughness 0.2
+                    metalness 0.8
+                  }
+                  geometry Cylinder {
+                    radius IS wheelRadius
+                    height 0.044
+                  }
+                }
+              ]
+            }
+          ]
+          name "left_wheel"
+          boundingObject USE WHEEL
+          physics Physics {
+            density -1
+            mass 0.300000
+            centerOfMass [ 0.000000 0.000000 0.000000 ]
+            # inertiaMatrix [
+            #   6.790000e-03 2.025000e-04 2.025000e-04
+            #   0.000000e+00 0.000000e+00 0.000000e+00
+            # ]
+          }
+        }
+      }
+      HingeJoint { # @note right
+        jointParameters HingeJointParameters {
+          axis 0.000000 1.000000 0.000000
+          anchor IS wheelPosR
+          #suspensionDampingConstant 0.2
+          #dampingConstant 0.2
+          #staticFriction 0.0
+        }
+        device [
+          RotationalMotor {
+            name "right wheel motor"
+            maxTorque IS maxTorque
+            controlPID IS motorPID
+            maxVelocity IS maxVelocity
+          }
+          PositionSensor {
+            noise IS positionSensorNoise
+            name "right wheel sensor"
+          }
+        ]
+        endPoint Solid {
+          translation IS wheelPosR
+          rotation -1 0 0 1.5707963
+          contactMaterial "wheel"
+          children [
+            USE WHEEL
+          ]
+          name "right_wheel"
+          boundingObject USE WHEEL
+          physics Physics {
+            density -1
+            mass 0.300000
+            centerOfMass [ 0.000000 0.000000 0.000000 ]
+            # inertiaMatrix [
+            #   6.790000e-03 2.025000e-04 2.025000e-04
+            #   0.000000e+00 0.000000e+00 0.000000e+00
+            # ]
+          }
+        }
+      }
+      BallJoint { # @note ball joint
+        jointParameters BallJointParameters {
+          anchor IS casterBallPos
+        }
+        endPoint Solid { #@note caster wheel
+          contactMaterial "frictionless"
+          translation IS casterBallPos
+          rotation 0.000000 1.000000 0.000000 0.000000
+          children [
+            Shape {
+              appearance PBRAppearance {
+                baseColor 0.310000 0.7100000 0.410000
+                transparency 0.000000
+                roughness 1.000000
+                metalness 0
+                emissiveColor 0.000000 0.000000 0.000000
+              }
+              geometry DEF CASTER Sphere {
+                radius IS wheelRadius
+              }
+            }
+          ]
+          name "caster_rear_wheel"
+          boundingObject USE CASTER
+          physics Physics {
+            density -1
+            mass 0.600000
+            # centerOfMass [ 0.000000 0.000000 0.000000 ]
+            # # inertiaMatrix [
+            # #   1.000000e-04 1.000000e-04 1.000000e-04
+            # #   0.000000e+00 0.000000e+00 0.000000e+00
+            # # ]
+          }
+        }
+      }
+      
+      ####### END caster wheel
+      %< if (fields.useIMU.value) { >%
+      Solid {
+        translation 0.000000 0.000000 0.095000
+        rotation 0.000000 1.000000 0.000000 0.000000
+        name "base_imu"
+        children [ InertialUnit {} ]
+      }
+      %< } >%
+      Solid {
+        translation 0.000000 0.000000 0.095000
+        rotation 0.000000 1.000000 0.000000 0.000000
+        name "base_gyro"
+        children [ Gyro {} ]
+        }
+       Solid {
+        translation 0.000000 0.000000 0.095000
+        rotation 0.000000 1.000000 0.000000 0.000000
+        name "base_gaccelerometer"
+        children [ Accelerometer {} ]
+        }
+      %< if (fields.useGPS.value) { >%
+      Solid {
+        translation 0.0 0.0 0.0
+        name "base_gps"
+        children [ GPS {} ]
+      }
+      %< } >%
+
+      %< if (fields.useCompass.value) { >%
+      Solid {
+        translation 0.0 0.0 0.0
+        name "base_compass"
+        children [ Compass {} ]
+      }
+      %< } >%
+
+      Solid {
+        translation -0.1725 0.000 0.150000
+        rotation 0 1 0 0 # -1 0 0 1.5707963 
+        children [
+          Lidar {
+            translation 0 0 0
+            rotation 0 1 0 0
+            children [
+              Shape {
+                castShadows FALSE
+                appearance DEF MAIN_APPEARANCE RoughPolymer {
+                  baseColor 0 0 0
+                  textureTransform TextureTransform {
+                    scale 4 4
+                  }
+                }
+                geometry Cylinder {
+                    radius 0.05
+                    height 0.04
+                }
+              }
+            ]
+            name "LDS-01"
+            boundingObject Group {
+              children [
+                Transform {
+                  translation 0 0 0
+                  rotation 0 1 0 0
+                  children [
+                    Cylinder {
+                      radius 0.055
+                      height 0.045
+                    }
+                  ]
+                }
+              ]
+            }
+            physics Physics {
+              density -1
+              mass 0.125
+            }
+            horizontalResolution 400 # 360° / 0.9°
+            fieldOfView 6.2831853 # 2pi
+            numberOfLayers 1
+            near 0.07
+            minRange 0.2
+            maxRange 16.0
+            noise 0.0043
+          }
+        ]
+        
+        # children [HEWAGVPrototypeWebots_ldsMesh {}]
+        name "base_scan"
+        physics Physics {
+          # density -1
+          # mass 0.114000
+          # centerOfMass [ 0.000000 0.000000 0.000000 ]
+          # # inertiaMatrix [
+          # #   1.000000e-03 1.000000e-03 1.000000e-03
+          # #   0.000000e+00 0.000000e+00 0.000000e+00
+          # # ]
+        }
+      }
+    ]
+    boundingObject Transform {
+      translation %<= -fields.wheelOffsetX.value >% 0.0 0.0
+        rotation 0.000000 0.000000 1.000000 1.570796
+        children [
+          Shape {
+                geometry Box {
+                   size IS robotBoundingBox
+                }
+              }
+        ]
+    }
+    physics Physics {
+      density -1
+      mass IS baseMass
+    }
+  }
+}

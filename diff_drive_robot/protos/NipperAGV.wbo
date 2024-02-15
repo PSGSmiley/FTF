@@ -1,0 +1,253 @@
+#VRML_OBJ R2022a utf8
+Robot {
+  translation 2 3.06 0.153
+  rotation 0 1 0 0
+  children [
+    Solid {
+      children [
+        GPS {
+        }
+      ]
+      name "base_gps"
+    }
+    Solid {
+      translation 0 0 0.15
+      rotation 0 1 0 0
+      children [
+        Lidar {
+          rotation 0 1 0 0
+          children [
+            Shape {
+              appearance DEF MAIN_APPEARANCE PBRAppearance {
+                baseColor 0 0 0
+                roughnessMap ImageTexture {
+                  url [
+                    "https://raw.githubusercontent.com/cyberbotics/webots/R2022a/projects/appearances/protos/textures/rough_polymer/rough_polymer_roughness.jpg"
+                  ]
+                }
+                metalness 0
+                normalMap ImageTexture {
+                  url [
+                    "https://raw.githubusercontent.com/cyberbotics/webots/R2022a/projects/appearances/protos/textures/rough_polymer/rough_polymer_normal.jpg"
+                  ]
+                }
+                normalMapFactor 2
+                occlusionMap ImageTexture {
+                  url [
+                    "https://raw.githubusercontent.com/cyberbotics/webots/R2022a/projects/appearances/protos/textures/rough_polymer/rough_polymer_occlusion.jpg"
+                  ]
+                }
+                occlusionMapStrength 2
+                textureTransform TextureTransform {
+                  scale 4 4
+                }
+              }
+              geometry Cylinder {
+                height 0.04
+                radius 0.05
+              }
+              castShadows FALSE
+            }
+          ]
+          name "RPLidar"
+          boundingObject Group {
+            children [
+              Transform {
+                rotation 0 1 0 0
+                children [
+                  Cylinder {
+                    height 0.045
+                    radius 0.055
+                  }
+                ]
+              }
+            ]
+          }
+          physics Physics {
+            density -1
+            mass 0.125
+          }
+          horizontalResolution 400
+          fieldOfView 6.2831853
+          numberOfLayers 1
+          near 0.07
+          minRange 0.2
+          maxRange 16
+          noise 0.0043
+        }
+      ]
+      name "base_scan"
+      physics Physics {
+      }
+    }
+    DEF GABEL_BOUND Transform {
+      translation -0.97 0 0.13
+      children [
+        Shape {
+          appearance PBRAppearance {
+            transparency 1
+          }
+          geometry Box {
+            size 2 0.645 0.45
+          }
+        }
+      ]
+    }
+    DEF REARWHEEL HingeJoint {
+      jointParameters HingeJointParameters {
+        axis 0 1 0
+        anchor -1.45 -0.04 -0.1
+      }
+      endPoint Solid {
+        translation -1.45 -0.04 -0.020000000000000004
+        rotation 0 1 0 0
+        children [
+          DEF REARWHEEL_TF Transform {
+            rotation 0 0.7071067811865475 0.7071067811865475 3.14159
+            children [
+              DEF REAR_WHEEL Shape {
+                appearance PBRAppearance {
+                }
+                geometry Cylinder {
+                  height 0.1
+                  radius 0.05
+                }
+              }
+            ]
+          }
+        ]
+        name "rear_wheel"
+        boundingObject USE REARWHEEL_TF
+        physics Physics {
+          density -1
+          mass 2
+          centerOfMass [
+            0 0 0
+          ]
+        }
+      }
+    }
+    DEF DREHSCHEMEL HingeJoint {
+      jointParameters HingeJointParameters {
+        axis 0 0 1
+        minStop -3
+        maxStop 3
+      }
+      device [
+        PositionSensor {
+          name "drehschemel_sensor"
+        }
+      ]
+      endPoint Solid {
+        children [
+          HingeJoint {
+            jointParameters HingeJointParameters {
+              axis 0 1 0
+              anchor 0 0.1725 -0.0522
+            }
+            device [
+              RotationalMotor {
+                name "left_wheel_joint"
+                maxVelocity 9
+                maxTorque 1000
+              }
+              PositionSensor {
+                name "left_wheel_joint_sensor"
+              }
+            ]
+            endPoint Solid {
+              translation 0 0.1725 -0.0522
+              rotation -1 0 0 1.5707963
+              children [
+                DEF WHEEL Transform {
+                  children [
+                    Shape {
+                      appearance DEF blue PBRAppearance {
+                        baseColor 0.2 0.2 0.8
+                        roughness 0.2
+                        metalness 0.8
+                      }
+                      geometry Cylinder {
+                        height 0.04
+                        radius 0.1
+                      }
+                    }
+                  ]
+                }
+              ]
+              name "left_wheel"
+              contactMaterial "wheel"
+              boundingObject USE WHEEL
+              physics Physics {
+                density -1
+                mass 0.3
+                centerOfMass [
+                  0 0 0
+                ]
+              }
+            }
+          }
+          HingeJoint {
+            jointParameters HingeJointParameters {
+              axis 0 1 0
+              anchor 0 -0.1725 -0.0522
+            }
+            device [
+              RotationalMotor {
+                name "right_wheel_joint"
+                maxVelocity 9
+                maxTorque 1000
+              }
+              PositionSensor {
+                name "right_wheel_joint_sensor"
+              }
+            ]
+            endPoint Solid {
+              translation 0 -0.1725 -0.0522
+              rotation -1 0 0 1.5707963
+              children [
+                USE WHEEL
+              ]
+              name "right_wheel"
+              contactMaterial "wheel"
+              boundingObject USE WHEEL
+              physics Physics {
+                density -1
+                mass 0.3
+                centerOfMass [
+                  0 0 0
+                ]
+              }
+            }
+          }
+        ]
+      }
+    }
+    DEF MESH Transform {
+      translation -0.724847 0.225179 -0.07
+      rotation 0 0 1 -1.55
+      scale 0.025 0.025 0.025
+      children [
+        Shape {
+          appearance PBRAppearance {
+            transparency 0.1
+          }
+          geometry Mesh {
+            url [
+              "/home/daniel/dev_ws/src/hewagv_simulation/meshes/D00347465_Hubgabel-FTF_ohne_Drehschemel.stl"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+  name "NipperAGV"
+  description "this is the hew nipper agv"
+  boundingObject USE GABEL_BOUND
+  physics Physics {
+    density -1
+    mass 1
+  }
+  controller "<extern>"
+  supervisor TRUE
+}

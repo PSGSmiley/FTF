@@ -1,0 +1,46 @@
+#VRML_SIM R2021b utf8
+# Prüfkörper: Platte
+# template language: javascript
+
+PROTO Platte [
+  field SFVec3f    translation 0 0 0
+  field SFRotation rotation    0 1 0 0
+  field SFString   name        "platte"
+  field SFVec3f    size_plate  0.01 0.8 0.3
+  field SFFloat    mass        10
+  field SFNode     appearance  VarnishedPine { textureTransform TextureTransform { scale 1 1 } }  # Defines the appearance of the wall.
+]
+{
+  %<
+    let size_plate = fields.size_plate.value;
+  >%
+  Solid {
+    translation IS translation
+    rotation IS rotation
+    model "platte"
+    children [
+      DEF PLATE Transform {
+        translation %<= -0.5 * size_plate.x >% 0 %<= 0.5 * size_plate.z >% 
+        children [
+          Shape {
+            appearance IS appearance
+            geometry Box {
+              size IS size_plate
+            }
+          }
+        ]
+      }
+      
+    ]
+    name IS name
+    boundingObject Group {
+      children [
+        USE PLATE
+      ]
+    }
+    physics Physics {
+          density -1
+          mass IS mass
+        }
+  }
+}
